@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 COPY . .
 
-# If you have dependencies, add:
+# If you have dependencies:
 # RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["python", "fastloop_trader.py"]
