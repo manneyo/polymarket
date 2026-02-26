@@ -358,7 +358,7 @@ def get_coingecko_momentum(asset="bitcoin", lookback_minutes=5):
 COINGECKO_ASSETS = {"BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana"}
 
 
-def get_momentum(asset="BTC", source="coinbase", lookback=5):
+def get_momentum(asset="BTC-USD", source="coinbase", lookback=5):
     """Get price momentum from configured source."""
     if source == "coinbase":
         symbol = ASSET_SYMBOLS.get(asset, "BTC-USD")
