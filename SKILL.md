@@ -1,7 +1,7 @@
 ---
 name: polymarket-fast-loop
 displayName: Polymarket FastLoop Trader
-description: Trade Polymarket BTC 5-minute and 15-minute fast markets using CEX price momentum signals via Simmer API. Default signal is Binance BTC/USDT klines. Use when user wants to trade sprint/fast markets, automate short-term crypto trading, or use CEX momentum as a Polymarket signal.
+description: Trade Polymarket BTC 5-minute and 15-minute fast markets using CEX price momentum signals via Simmer API. Default signal is coinbase BTC-USD klines. Use when user wants to trade sprint/fast markets, automate short-term crypto trading, or use CEX momentum as a Polymarket signal.
 metadata: {"clawdbot":{"emoji":"⚡","requires":{"env":["SIMMER_API_KEY"]},"cron":null,"autostart":false}}
 authors:
   - Simmer (@simmer_markets)
@@ -11,13 +11,13 @@ published: true
 
 # Polymarket FastLoop Trader
 
-Trade Polymarket's 5-minute BTC fast markets using real-time price momentum from Binance.
+Trade Polymarket's 5-minute BTC fast markets using real-time price momentum from coinbase.
 
 > **Polymarket only.** All trades execute on Polymarket with real USDC. Use `--live` for real trades, dry-run is the default.
 
-**How it works:** Every cycle, the script finds the current live BTC fast market, checks BTC price momentum on Binance, and trades if momentum diverges from market odds.
+**How it works:** Every cycle, the script finds the current live BTC fast market, checks BTC price momentum on coinbase, and trades if momentum diverges from market odds.
 
-**This is a template.** The default signal (Binance momentum) gets you started. Your agent's reasoning is the edge — layer on sentiment analysis, multi-exchange spreads, news feeds, or custom signals to improve it.
+**This is a template.** The default signal (coinbase momentum) gets you started. Your agent's reasoning is the edge — layer on sentiment analysis, multi-exchange spreads, news feeds, or custom signals to improve it.
 
 > ⚠️ Fast markets carry Polymarket's 10% fee (`is_paid: true`). Factor this into your edge calculations.
 
@@ -105,12 +105,12 @@ python fastloop_trader.py --set min_momentum_pct=0.3 --set max_position=10
 | `entry_threshold` | 0.05 | `SIMMER_SPRINT_ENTRY` | Min price divergence from 50¢ to trigger |
 | `min_momentum_pct` | 0.5 | `SIMMER_SPRINT_MOMENTUM` | Min BTC % move to trigger |
 | `max_position` | 5.0 | `SIMMER_SPRINT_MAX_POSITION` | Max $ per trade |
-| `signal_source` | binance | `SIMMER_SPRINT_SIGNAL` | Price feed (binance, coingecko) |
+| `signal_source` | coinbase | `SIMMER_SPRINT_SIGNAL` | Price feed (coinbase, coingecko) |
 | `lookback_minutes` | 5 | `SIMMER_SPRINT_LOOKBACK` | Minutes of price history |
 | `min_time_remaining` | 60 | `SIMMER_SPRINT_MIN_TIME` | Skip fast markets with less time left (seconds) |
 | `asset` | BTC | `SIMMER_SPRINT_ASSET` | Asset to trade (BTC, ETH, SOL) |
 | `window` | 5m | `SIMMER_SPRINT_WINDOW` | Market window duration (5m or 15m) |
-| `volume_confidence` | true | `SIMMER_SPRINT_VOL_CONF` | Weight signal by Binance volume |
+| `volume_confidence` | true | `SIMMER_SPRINT_VOL_CONF` | Weight signal by coinbase volume |
 
 ### Example config.json
 
@@ -121,7 +121,7 @@ python fastloop_trader.py --set min_momentum_pct=0.3 --set max_position=10
   "max_position": 10.0,
   "asset": "BTC",
   "window": "5m",
-  "signal_source": "binance"
+  "signal_source": "coinbase"
 }
 ```
 
@@ -139,9 +139,9 @@ python fastloop_trader.py --set KEY=VALUE    # Update config
 
 ## Signal Logic
 
-Default signal (Binance momentum):
+Default signal (coinbase momentum):
 
-1. Fetch last 5 one-minute candles from Binance (`BTCUSDT`)
+1. Fetch last 5 one-minute candles from coinbase (`BTC-USD`)
 2. Calculate momentum: `(price_now - price_5min_ago) / price_5min_ago`
 3. Compare momentum direction to current Polymarket odds
 4. Trade when:
@@ -155,7 +155,7 @@ Default signal (Binance momentum):
 
 The default momentum signal is a starting point. To add your own edge:
 
-- **Multi-exchange:** Compare prices across Binance, Kraken, Bitfinex — divergence between exchanges can predict CLOB direction
+- **Multi-exchange:** Compare prices across coinbase, Kraken, Bitfinex — divergence between exchanges can predict CLOB direction
 - **Sentiment:** Layer in Twitter/social signals — a viral tweet can move fast markets
 - **Technical indicators:** RSI, VWAP, order flow analysis
 - **News:** Breaking news correlation — use your agent's reasoning to interpret headlines
@@ -175,7 +175,7 @@ The skill handles all the Simmer plumbing (discovery, import, trade execution). 
   Entry threshold:  0.05 (min divergence from 50¢)
   Min momentum:     0.5% (min price move)
   Max position:     $5.00
-  Signal source:    binance
+  Signal source:    coinbase
   Lookback:         5 minutes
   Min time left:    60s
   Volume weighting: ✓
@@ -187,7 +187,7 @@ The skill handles all the Simmer plumbing (discovery, import, trade execution). 
   Expires in: 185s
   Current YES price: $0.480
 
-📈 Fetching BTC price signal (binance)...
+📈 Fetching BTC price signal (coinbase)...
   Price: $97,234.50 (was $96,812.30)
   Momentum: +0.436%
   Direction: up
@@ -221,7 +221,7 @@ All trades are tagged with `source: "sdk:fastloop"`. This means:
 - Fast market trading needs Pro for reasonable frequency
 
 **"Failed to fetch price data"**
-- Binance API may be down or rate limited
+- coinbase API may be down or rate limited
 - Try `--set signal_source=coingecko` as fallback
 
 **"Trade failed: no liquidity"**

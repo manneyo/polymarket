@@ -3,7 +3,7 @@
 Simmer FastLoop Trading Skill
 
 Trades Polymarket BTC 5-minute fast markets using CEX price momentum.
-Default signal: Binance BTCUSDT candles. Agents can customize signal source.
+Default signal: Coinbase BTC-USD candles. Agents can customize signal source.
 
 Usage:
     python fast_trader.py              # Dry run (show opportunities, no trades)
@@ -52,8 +52,8 @@ CONFIG_SCHEMA = {
                          "help": "Min BTC % move in lookback window to trigger"},
     "max_position": {"default": 5.0, "env": "SIMMER_SPRINT_MAX_POSITION", "type": float,
                      "help": "Max $ per trade"},
-    "signal_source": {"default": "binance", "env": "SIMMER_SPRINT_SIGNAL", "type": str,
-                      "help": "Price feed source (binance, coingecko)"},
+    "signal_source": {"default": "coinbase", "env": "SIMMER_SPRINT_SIGNAL", "type": str,
+                      "help": "Price feed source (coinbase, coingecko)"},
     "lookback_minutes": {"default": 5, "env": "SIMMER_SPRINT_LOOKBACK", "type": int,
                          "help": "Minutes of price history for momentum calc"},
     "min_time_remaining": {"default": 60, "env": "SIMMER_SPRINT_MIN_TIME", "type": int,
@@ -72,7 +72,7 @@ MIN_SHARES_PER_ORDER = 5  # Polymarket minimum
 
 # Asset → Binance symbol mapping
 ASSET_SYMBOLS = {
-    "BTC": "BTCUSDT",
+    "BTC": "BTC-USD",
     "ETH": "ETHUSDT",
     "SOL": "SOLUSDT",
 }
@@ -283,27 +283,32 @@ def find_best_fast_market(markets):
 # =============================================================================
 # CEX Price Signal
 # =============================================================================
-
-def get_binance_momentum(symbol="BTCUSDT", lookback_minutes=5):
-    """Get price momentum from Binance public API.
+# binance API
+def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
+    """Get price momentum from Coinbase candles endpoint.
     Returns: {momentum_pct, direction, price_now, price_then, avg_volume, candles}
     """
+    end_ts = int(time.time())
+    start_ts = end_ts - lookback_minutes * 60
+
     url = (
-        f"https://api.binance.com/api/v3/klines"
-        f"?symbol={symbol}&interval=1m&limit={lookback_minutes}"
+        f"https://api.coinbase.com/api/v3/brokerage/products/{product_id}/candles"
+        f"?granularity=ONE_MINUTE&start={start_ts}&end={end_ts}"
     )
-    result = _api_request(url)
+
+    result = _api_request(url)  # should return a list of arrays: [time, low, high, open, close, volume][web:31]
+
     if not result or isinstance(result, dict):
         return None
 
     try:
-        # Kline format: [open_time, open, high, low, close, volume, ...]
+        # Coinbase candle format: [time, low, high, open, close, volume][web:31][web:10]
         candles = result
         if len(candles) < 2:
             return None
 
-        price_then = float(candles[0][1])   # open of oldest candle
-        price_now = float(candles[-1][4])    # close of newest candle
+        price_then = float(candles[0][3])   # open of oldest candle
+        price_now  = float(candles[-1][4])  # close of newest candle
         momentum_pct = ((price_now - price_then) / price_then) * 100
         direction = "up" if momentum_pct > 0 else "down"
 
@@ -311,7 +316,6 @@ def get_binance_momentum(symbol="BTCUSDT", lookback_minutes=5):
         avg_volume = sum(volumes) / len(volumes)
         latest_volume = volumes[-1]
 
-        # Volume ratio: latest vs average (>1 = above average activity)
         volume_ratio = latest_volume / avg_volume if avg_volume > 0 else 1.0
 
         return {
@@ -354,11 +358,11 @@ def get_coingecko_momentum(asset="bitcoin", lookback_minutes=5):
 COINGECKO_ASSETS = {"BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana"}
 
 
-def get_momentum(asset="BTC", source="binance", lookback=5):
+def get_momentum(asset="BTC", source="coinbase", lookback=5):
     """Get price momentum from configured source."""
-    if source == "binance":
-        symbol = ASSET_SYMBOLS.get(asset, "BTCUSDT")
-        return get_binance_momentum(symbol, lookback)
+    if source == "coinbase":
+        symbol = ASSET_SYMBOLS.get(asset, "BTC-USD")
+        return get_coinbase_momentum(symbol, lookback)
     elif source == "coingecko":
         cg_id = COINGECKO_ASSETS.get(asset, "bitcoin")
         return get_coingecko_momentum(cg_id, lookback)
