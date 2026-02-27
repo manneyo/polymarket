@@ -296,26 +296,27 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
         f"?granularity=ONE_MINUTE&start={start_ts}&end={end_ts}"
     )
 
-    result = _api_request(url)  # should return a list of arrays: [time, low, high, open, close, volume][web:31]
+    result = _api_request(url)
 
-    if not result or isinstance(result, dict):
+    # If _api_request wrapped an error, respect it
+    if not result or (isinstance(result, dict) and result.get("error")):
         return None
 
     try:
-        # Coinbase candle format: [time, low, high, open, close, volume][web:31][web:10]
-        candles = result
+        # Advanced Trade: result is a dict with "candles"
+        # Each candle is like: {"start": "...", "low": "...", "high": "...", "open": "...", "close": "...", "volume": "..."} [web:22][web:25]
+        candles = result["candles"]
         if len(candles) < 2:
             return None
 
-        price_then = float(candles[0][3])   # open of oldest candle
-        price_now  = float(candles[-1][4])  # close of newest candle
+        price_then = float(candles[0]["open"])   # oldest candle open
+        price_now  = float(candles[-1]["close"]) # newest candle close
         momentum_pct = ((price_now - price_then) / price_then) * 100
         direction = "up" if momentum_pct > 0 else "down"
 
-        volumes = [float(c[5]) for c in candles]
+        volumes = [float(c["volume"]) for c in candles]
         avg_volume = sum(volumes) / len(volumes)
         latest_volume = volumes[-1]
-
         volume_ratio = latest_volume / avg_volume if avg_volume > 0 else 1.0
 
         return {
@@ -328,8 +329,9 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
             "volume_ratio": volume_ratio,
             "candles": len(candles),
         }
-    except (IndexError, ValueError, KeyError):
+    except (KeyError, ValueError, IndexError, TypeError):
         return None
+
 
 
 def get_coingecko_momentum(asset="bitcoin", lookback_minutes=5):
