@@ -14,7 +14,7 @@ Usage:
 Requires:
     SIMMER_API_KEY environment variable (get from simmer.markets/dashboard)
 """
-
+import time
 import os
 import sys
 import json
