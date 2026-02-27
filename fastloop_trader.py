@@ -333,12 +333,15 @@ def find_best_fast_market(markets):
 
 
 def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
-    """Get price momentum from Coinbase candles endpoint."""
+    """Get price momentum from Coinbase public candles endpoint.
+    Returns: {momentum_pct, direction, price_now, price_then, avg_volume, latest_volume, volume_ratio, candles}
+    """
     end_ts = int(time.time())
     start_ts = end_ts - lookback_minutes * 60
 
+    # PUBLIC Advanced Trade candles endpoint (no auth required) [web:25][web:27]
     url = (
-        f"https://api.coinbase.com/api/v3/brokerage/products/{product_id}/candles"
+        f"https://api.coinbase.com/api/v3/market/products/{product_id}/candles"
         f"?granularity=ONE_MINUTE&start={start_ts}&end={end_ts}"
     )
 
@@ -346,15 +349,18 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
     print("Coinbase URL:", url, file=sys.stderr)
     print("Coinbase candles raw:", result, file=sys.stderr)
 
+    # Bail if _api_request wrapped an error
     if not result or (isinstance(result, dict) and result.get("error")):
         return None
 
     try:
+        # Expected shape: {"candles": [ { "start", "low", "high", "open", "close", "volume" }, ... ]} [web:25][web:27]
         candles = result["candles"]
         if len(candles) < 2:
             return None
-        price_then = float(candles[0]["open"])
-        price_now  = float(candles[-1]["close"])
+
+        price_then = float(candles[0]["open"])   # oldest open
+        price_now  = float(candles[-1]["close"]) # newest close
         momentum_pct = ((price_now - price_then) / price_then) * 100
         direction = "up" if momentum_pct > 0 else "down"
 
@@ -375,6 +381,7 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
         }
     except (KeyError, ValueError, IndexError, TypeError):
         return None
+
 
 
 def get_coingecko_momentum(asset="bitcoin", lookback_minutes=5):
