@@ -28,6 +28,14 @@ from urllib.parse import urlencode, quote
 
 # Force line-buffered stdout for non-TTY environments (cron, Docker, OpenClaw)
 sys.stdout.reconfigure(line_buffering=True)
+def get_coinbase_creds():
+    key_id = os.environ.get("COINBASE_API_KEY_ID")
+    private_key = os.environ.get("COINBASE_API_PRIVATE_KEY")
+
+    if not key_id or not private_key:
+        raise RuntimeError("COINBASE_API_KEY_ID or COINBASE_API_PRIVATE_KEY not set")
+
+    return key_id, private_key
 
 # Optional: Trade Journal integration
 try:
