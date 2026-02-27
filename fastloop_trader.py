@@ -286,7 +286,7 @@ def find_best_fast_market(markets):
 # binance API
 def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
     """Get price momentum from Coinbase candles endpoint.
-    Returns: {momentum_pct, direction, price_now, price_then, avg_volume, candles}
+    Returns: {momentum_pct, direction, price_now, price_then, avg_volume, latest_volume, volume_ratio, candles}
     """
     end_ts = int(time.time())
     start_ts = end_ts - lookback_minutes * 60
@@ -298,19 +298,24 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
 
     result = _api_request(url)
 
-    # If _api_request wrapped an error, respect it
+    # Uncomment this line once to see the exact JSON in your logs:
+    # print("Coinbase candles raw:", result, file=sys.stderr)
+
+    # Handle network / HTTP errors wrapped by _api_request
     if not result or (isinstance(result, dict) and result.get("error")):
         return None
 
     try:
-        # Advanced Trade: result is a dict with "candles"
-        # Each candle is like: {"start": "...", "low": "...", "high": "...", "open": "...", "close": "...", "volume": "..."} [web:22][web:25]
+        # Advanced Trade API returns a dict with a "candles" list:
+        # {"candles": [{"start": "...", "low": "...", "high": "...",
+        #               "open": "...", "close": "...", "volume": "..."}, ...]}
         candles = result["candles"]
         if len(candles) < 2:
             return None
 
-        price_then = float(candles[0]["open"])   # oldest candle open
-        price_now  = float(candles[-1]["close"]) # newest candle close
+        # Oldest candle first, newest last
+        price_then = float(candles[0]["open"])
+        price_now  = float(candles[-1]["close"])
         momentum_pct = ((price_now - price_then) / price_then) * 100
         direction = "up" if momentum_pct > 0 else "down"
 
@@ -331,6 +336,7 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
         }
     except (KeyError, ValueError, IndexError, TypeError):
         return None
+
 
 
 
