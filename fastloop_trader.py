@@ -337,7 +337,7 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
     Returns: {momentum_pct, direction, price_now, price_then, avg_volume, latest_volume, volume_ratio, candles}
     """ 
 
-    print("### USING EXCHANGE COINBASE FUNCTION ###", file=sys.stderr)
+    
     import requests
     import datetime
     import time
@@ -345,6 +345,8 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
 
     end_time = datetime.datetime.utcnow()
     start_time = end_time - datetime.timedelta(minutes=lookback_minutes)
+
+    print("### USING EXCHANGE COINBASE FUNCTION ###", file=sys.stderr)
 
     url = f"https://api.exchange.coinbase.com/products/{product_id}/candles"
 
