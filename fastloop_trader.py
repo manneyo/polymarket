@@ -335,7 +335,9 @@ def find_best_fast_market(markets):
 def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
     """Get price momentum from Coinbase Exchange public candles endpoint.
     Returns: {momentum_pct, direction, price_now, price_then, avg_volume, latest_volume, volume_ratio, candles}
-    """
+    """ 
+
+    print("### USING EXCHANGE COINBASE FUNCTION ###", file=sys.stderr)
     import requests
     import datetime
     import time
