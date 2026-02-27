@@ -333,14 +333,7 @@ def find_best_fast_market(markets):
 
 
 def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
-    """Get price momentum from Coinbase candles endpoint.
-
-    Returns:
-        {
-          momentum_pct, direction, price_now, price_then,
-          avg_volume, latest_volume, volume_ratio, candles
-        }
-    """
+    """Get price momentum from Coinbase candles endpoint."""
     end_ts = int(time.time())
     start_ts = end_ts - lookback_minutes * 60
 
@@ -350,22 +343,18 @@ def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
     )
 
     result = _api_request(url)
-
-    # Debug (optional):
-    # print("Coinbase URL:", url, file=sys.stderr)
-    # print("Coinbase candles raw:", result, file=sys.stderr)
+    print("Coinbase URL:", url, file=sys.stderr)
+    print("Coinbase candles raw:", result, file=sys.stderr)
 
     if not result or (isinstance(result, dict) and result.get("error")):
         return None
 
     try:
-        # Advanced Trade candles: {"candles": [{...}], ...}
         candles = result["candles"]
         if len(candles) < 2:
             return None
-
         price_then = float(candles[0]["open"])
-        price_now = float(candles[-1]["close"])
+        price_now  = float(candles[-1]["close"])
         momentum_pct = ((price_now - price_then) / price_then) * 100
         direction = "up" if momentum_pct > 0 else "down"
 
