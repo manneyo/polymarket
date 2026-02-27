@@ -1,9 +1,14 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-COPY . .
 
-# If you have dependencies:
-# RUN pip install --no-cache-dir -r requirements.txt
+# Copy requirements first (better Docker caching)
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy rest of the app
+COPY . .
 
 CMD ["python", "fastloop_trader.py"]
