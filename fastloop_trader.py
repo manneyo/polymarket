@@ -81,7 +81,7 @@ CONFIG_SCHEMA = {
         "help": "Price feed source (coinbase, coingecko)",
     },
     "lookback_minutes": {
-        "default": 15,
+        "default": 5,
         "env": "SIMMER_SPRINT_LOOKBACK",
         "type": int,
         "help": "Minutes of price history for momentum calc",
@@ -332,7 +332,7 @@ def find_best_fast_market(markets):
 # =============================================================================
 
 
-def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=15):
+def get_coinbase_momentum(product_id="BTC-USD", lookback_minutes=5):
     """Get price momentum from Coinbase Exchange public candles endpoint.
     Returns: {momentum_pct, direction, price_now, price_then, avg_volume, latest_volume, volume_ratio, candles}
     """ 
