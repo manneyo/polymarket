@@ -1,11 +1,8 @@
 {
-  "entry_threshold": 0.045,
-  "min_momentum_pct": 0.08,
-  "max_position": 5.0,
-  "lookback_minutes": 5,
-  "min_time_remaining": 60,
-  "asset": "BTC",
-  "window": "5m",
+  "entry_threshold": 0.035,
+  "min_momentum_pct": 0.05,
+  "lookback_minutes": 3,
   "signal_source": "coinbase",
-  "volume_confidence": false
+  "volume_confidence": false,
+  "max_position": 5.0
 }
